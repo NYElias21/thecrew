@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, Modal, TouchableOpacity, ScrollView, Image } from 'react-native';
 import Video from 'react-native-video';
 
-
 const FeedScreen = ({ navigation }) => {
     const [selectedCity, setSelectedCity] = useState('Charlotte');
     const [searchQuery, setSearchQuery] = useState('');
@@ -27,10 +26,17 @@ const FeedScreen = ({ navigation }) => {
             commentsCount: 32,
             savesCount: 11,
             sharesCount: 7,
-        }
-
+            category: 'Nature', // Example category
+        },
         // ... add more dummy data as needed
     ];
+
+    // Function to filter posts based on selected filter and search query
+    const filteredData = data.filter(post => {
+        const filterMatch = selectedFilter === 'All' || post.category === selectedFilter;
+        const searchMatch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || post.description.toLowerCase().includes(searchQuery.toLowerCase());
+        return filterMatch && searchMatch;
+    });
 
     const renderFilter = (filter) => (
         <TouchableOpacity
@@ -69,7 +75,7 @@ const FeedScreen = ({ navigation }) => {
             </View>
 
             <FlatList
-                data={data}
+                data={filteredData} // Use filteredData instead of data
                 renderItem={({ item }) => (
                     <TouchableOpacity onPress={() => navigation.navigate('PostDetailScreen', { post: item })}>
                         <View style={styles.post}>
@@ -131,7 +137,6 @@ const FeedScreen = ({ navigation }) => {
         </View>
     );
 };
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
