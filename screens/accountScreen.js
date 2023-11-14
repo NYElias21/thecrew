@@ -1,17 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Button } from 'react-native';
 import { auth } from './firebaseConfig';
 
 const AccountScreen = () => {
-    const user = auth.currentUser;
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((authUser) => {
+            if (authUser) {
+                setUser(authUser);
+            } else {
+                setUser(null);
+            }
+        });
+
+        return unsubscribe;
+    }, []);
 
     // Dummy data for demonstration
     const followersCount = 150; // Fetch this from your backend
     const followingCount = 80;  // Fetch this from your backend
     const coverImage = require('../assets/post.jpg'); // Replace with your cover image URL
     const profilePic = require('../assets/profilePic.jpg'); // Using require for local image
-    const userName = "John Doe"; // Fetch this from your backend or authentication provider
-    const userCity = "Charlotte"; // Fetch this from your backend or user profile
+    const userName = user ? user.displayName : "No Name"; // User's name
+    const userEmail = user ? user.email : "No Email"; // User's email
 
     const [activeTab, setActiveTab] = useState('Created');
 
@@ -33,7 +45,7 @@ const AccountScreen = () => {
 
             <View style={styles.userInfoSection}>
                 <Text style={styles.userName}>{userName}</Text>
-                <Text style={styles.userCity}>{userCity}</Text>
+                <Text style={styles.userCity}>{userEmail}</Text>
                 <View style={styles.userStats}>
                     <Text style={styles.statText}>{followersCount} <Text style={styles.statLabel}>Followers</Text></Text>
                     <Text style={styles.dot}>•</Text>
@@ -79,6 +91,7 @@ const AccountScreen = () => {
         </View>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: {

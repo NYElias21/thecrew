@@ -24,7 +24,7 @@ const SignupScreen = ({ navigation }) => {
                 });
 
                 // Navigate to another screen or show a success message
-                navigation.navigate('Your_Next_Screen'); // Replace 'Your_Next_Screen' with your desired screen
+                navigation.navigate('Home', { screen: 'Feed' }); // Replace 'Your_Next_Screen' with your desired screen
             })
             .catch((error) => {
                 const errorCode = error.code;

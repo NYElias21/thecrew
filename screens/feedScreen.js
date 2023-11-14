@@ -2,6 +2,33 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, Modal, TouchableOpacity, ScrollView, Image } from 'react-native';
 import Video from 'react-native-video';
 
+const VoteButtons = ({ postId }) => {
+    const [vote, setVote] = useState(0); // 0 for no vote, 1 for upvote, -1 for downvote
+
+    const handleUpvote = () => {
+        setVote(vote === 1 ? 0 : 1); // Toggle upvote
+        // Add logic to update the vote in your backend or state
+    };
+
+    const handleDownvote = () => {
+        setVote(vote === -1 ? 0 : -1); // Toggle downvote
+        // Add logic to update the vote in your backend or state
+    };
+
+    return (
+        <View style={styles.voteContainer}>
+            <TouchableOpacity onPress={handleUpvote}>
+                <Text style={[styles.voteButton, vote === 1 && styles.upvoted]}>↑</Text>
+            </TouchableOpacity>
+            <Text style={styles.voteCount}>{Math.abs(vote)}</Text>
+            <View style={styles.separator} />
+            <TouchableOpacity onPress={handleDownvote}>
+                <Text style={[styles.voteButton, vote === -1 && styles.downvoted]}>↓</Text>
+            </TouchableOpacity>
+        </View>
+    );
+};
+
 const FeedScreen = ({ navigation }) => {
     const [selectedCity, setSelectedCity] = useState('Charlotte');
     const [searchQuery, setSearchQuery] = useState('');
@@ -75,13 +102,16 @@ const FeedScreen = ({ navigation }) => {
             </View>
 
             <FlatList
-                data={filteredData} // Use filteredData instead of data
+                data={filteredData}
                 renderItem={({ item }) => (
                     <TouchableOpacity onPress={() => navigation.navigate('PostDetailScreen', { post: item })}>
                         <View style={styles.post}>
                             <View style={styles.postHeader}>
-                                <Image source={item.user.profilePic} style={styles.profilePic} />
-                                <Text style={styles.username}>{item.user.username}</Text>
+                                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                    <Image source={item.user.profilePic} style={styles.profilePic} />
+                                    <Text style={styles.username}>{item.user.username}</Text>
+                                </View>
+                                <VoteButtons postId={item.id} />
                             </View>
                             {item.contentType === 'photo' ? (
                                 <Image source={item.content} style={styles.content} />
@@ -91,7 +121,8 @@ const FeedScreen = ({ navigation }) => {
                                     style={styles.content}
                                     resizeMode="cover"
                                     controls={true}
-                                />)}
+                                />
+                            )}
                             <Text style={styles.postTitle}>{item.title}</Text>
                             <Text style={styles.postLocation}>{item.location}</Text>
                         </View>
@@ -99,6 +130,8 @@ const FeedScreen = ({ navigation }) => {
                 )}
                 keyExtractor={item => item.id}
             />
+
+
 
             {/* City Selection Modal */}
             <Modal
@@ -138,6 +171,43 @@ const FeedScreen = ({ navigation }) => {
     );
 };
 const styles = StyleSheet.create({
+    postHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between', // Adjusted for layout
+        marginBottom: 10,
+    },
+    voteContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 15,
+        padding: 5,
+    },
+    voteButton: {
+        fontSize: 16,
+        color: '#333',
+        paddingHorizontal: 5,
+    },
+    upvoted: {
+        color: 'green',
+    },
+    downvoted: {
+        color: 'red',
+    },
+    voteCount: {
+        paddingHorizontal: 5,
+        fontSize: 16,
+        color: '#333',
+    },
+    separator: {
+        height: '100%',
+        width: 1,
+        backgroundColor: '#ddd',
+        marginHorizontal: 5,
+    },
     container: {
         flex: 1,
         paddingTop: 40, // Adjust this value to add space at the top of the screen
