@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, Modal, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { StatusBar, View, Text, StyleSheet, FlatList, TextInput, Modal, TouchableOpacity, ScrollView, Image } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import Video from 'react-native-video';
+
+
 
 const VoteButtons = ({ postId }) => {
     const [vote, setVote] = useState(0); // 0 for no vote, 1 for upvote, -1 for downvote
@@ -30,12 +33,23 @@ const VoteButtons = ({ postId }) => {
 };
 
 const FeedScreen = ({ navigation }) => {
+    const [isMuted, setIsMuted] = useState(true); // Video starts muted
+
     const [selectedCity, setSelectedCity] = useState('Charlotte');
     const [searchQuery, setSearchQuery] = useState('');
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedFilter, setSelectedFilter] = useState('All');
 
-    const filters = ['All', 'Nature', 'Dates', 'Night Life', 'Budget Friendly'];
+    const filters = [
+        { name: 'All', icon: 'globe' }, // Replace 'ios-globe' with the correct icon name
+        { name: 'Seasonal', icon: 'leaf' }, // Example icon, replace with your choice
+        { name: 'Dates', icon: 'heart' }, // Example icon, replace with your choice
+        { name: 'Nights Out', icon: 'moon' }, // Example icon, replace with your choice
+        { name: 'Nature', icon: 'flower' }, // Example icon, replace with your choice
+        { name: 'Day Trips', icon: 'sunny' }, // Example icon, replace with your choice
+        { name: 'Getaways', icon: 'airplane' }, // Example icon, replace with your choice
+    ];
+
 
     const data = [
         {
@@ -65,42 +79,56 @@ const FeedScreen = ({ navigation }) => {
         return filterMatch && searchMatch;
     });
 
-    const renderFilter = (filter) => (
-        <TouchableOpacity
-            key={filter}
-            style={[styles.filterOption, selectedFilter === filter && styles.selectedFilter]}
-            onPress={() => setSelectedFilter(filter)}
-        >
-            <Text style={selectedFilter === filter ? styles.selectedFilterText : styles.filterText}>
-                {filter}
-            </Text>
-        </TouchableOpacity>
+    const renderFilter = (filter, index) => (
+        <View style={{ flexDirection: 'row', alignItems: 'center', height: '100%' }} key={filter.name}>
+            <TouchableOpacity
+                style={styles.filterOption}
+                onPress={() => setSelectedFilter(filter.name)}
+            >
+                <Icon
+                    name={filter.icon}
+                    size={20}
+                    color={selectedFilter === filter.name ? '#489fb5' : 'black'}
+                />
+                <Text style={selectedFilter === filter.name ? styles.selectedFilterText : styles.filterText}>
+                    {filter.name}
+                </Text>
+            </TouchableOpacity>
+            {filter.name === 'All' && <View style={styles.separatorLine} />}
+        </View>
     );
+    
+
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="dark-content" />
+
             <View style={styles.header}>
                 <Text style={styles.title}>Discover</Text>
                 <TouchableOpacity style={styles.cityPicker} onPress={() => setModalVisible(true)}>
                     <Text>Cities</Text>
                 </TouchableOpacity>
             </View>
-            <TextInput
-                style={styles.searchInput}
-                placeholder="Search..."
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-            />
+            <View style={styles.searchSection}>
+                <Icon name="search" size={20} color="#000" style={styles.searchIcon} />
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search..."
+                    placeholderTextColor="#000" // Change placeholder text color
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                />
+            </View>
             <View style={styles.filterWrapper}>
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     alwaysBounceVertical={false}
                 >
-                    {filters.map(filter => renderFilter(filter))}
+{filters.map((filter, index) => renderFilter(filter, index))}
                 </ScrollView>
             </View>
-
             <FlatList
                 data={filteredData}
                 renderItem={({ item }) => (
@@ -116,12 +144,21 @@ const FeedScreen = ({ navigation }) => {
                             {item.contentType === 'photo' ? (
                                 <Image source={item.content} style={styles.content} />
                             ) : (
-                                <Video
-                                    source={item.content}
-                                    style={styles.content}
-                                    resizeMode="cover"
-                                    controls={true}
-                                />
+                                <View>
+                                    <Video
+                                        source={item.content}
+                                        style={styles.content}
+                                        resizeMode="cover"
+                                        muted={isMuted} // Use the state to control the sound
+                                        repeat={true} // Optional: if you want the video to loop
+                                    />
+                                    <TouchableOpacity
+                                        style={styles.soundButton}
+                                        onPress={() => setIsMuted(!isMuted)}
+                                    >
+                                        <Icon name={isMuted ? "volume-mute" : "volume-high"} size={20} color="#FFF" />
+                                    </TouchableOpacity>
+                                </View>
                             )}
                             <Text style={styles.postTitle}>{item.title}</Text>
                             <Text style={styles.postLocation}>{item.location}</Text>
@@ -130,7 +167,6 @@ const FeedScreen = ({ navigation }) => {
                 )}
                 keyExtractor={item => item.id}
             />
-
 
 
             {/* City Selection Modal */}
@@ -171,6 +207,19 @@ const FeedScreen = ({ navigation }) => {
     );
 };
 const styles = StyleSheet.create({
+    soundButton: {
+        position: 'absolute',
+        right: 10,
+        bottom: 10,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)', // Semi-transparent background
+        padding: 8,
+        borderRadius: 15,
+    },
+    filterIcon: {
+        width: 20, // Adjust size as needed
+        height: 20, // Adjust size as needed
+        marginRight: 5, // Space between icon and text
+    },
     postHeader: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -228,11 +277,23 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
-    searchInput: {
-        padding: 10,
+    searchSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: '#f5f5f5',
         borderRadius: 8,
         marginBottom: 20,
+        paddingHorizontal: 10,
+    },
+    searchIcon: {
+        marginRight: 10,
+    },
+    searchInput: {
+        flex: 1,
+        padding: 10,
+        backgroundColor: '#f5f5f5',
+        borderRadius: 8,
+        color: '#000', // Change input text color
     },
     post: {
         padding: 15,
@@ -274,34 +335,33 @@ const styles = StyleSheet.create({
     filterContainer: {
         flexDirection: 'row',
         marginTop: 10,
-        marginBottom: 5,  // Adjust this value to reduce the space below the filter container
+        marginBottom: 5,  // Provide a specific value here
     },
     filterOption: {
-        height: 30,            // Explicitly set the height
         paddingHorizontal: 15,
-        paddingVertical: 3,   // Reduce vertical padding
-        borderRadius: 20,
+        paddingVertical: 10, // Adjusted padding
         marginRight: 10,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        alignItems: 'center',  // Center the text vertically
+        alignItems: 'center',
         justifyContent: 'center',
+        borderWidth: 0,
     },
-    selectedFilter: {
-        backgroundColor: '#489fb5',
+    selectedFilterText: {
+        color: '#489fb5',
+        lineHeight: 26, // Adjusted line height
+        fontSize: 16, // Adjust font size if necessary
     },
     filterText: {
         color: 'black',
-        lineHeight: 24,        // Adjust lineHeight to match the height minus padding
+        lineHeight: 26, // Adjusted line height
+        fontSize: 16, // Adjust font size if necessary
     },
-    selectedFilterText: {
-        color: 'white',
-        lineHeight: 24,
-    },
+
     filterWrapper: {
-        height: 36,  // This height should match the total height of the filter buttons (height + padding)
-        marginBottom: 10,  // Adjust this value to control the space below the filter container
+        // Removed fixed height to allow content to define its space
+        marginBottom: 10,
+        paddingHorizontal: 10, // Add padding if needed
     },
+
     postHeader: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -318,7 +378,7 @@ const styles = StyleSheet.create({
     },
     content: {
         width: '100%',
-        height: 350, // Adjust based on your preference
+        height: 425, // Adjust based on your preference
         marginBottom: 10,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
@@ -328,10 +388,18 @@ const styles = StyleSheet.create({
     postTitle: {
         fontWeight: 'bold',
         marginBottom: 5,
+        fontSize: 20,
     },
     postLocation: {
-        fontStyle: 'italic',
+        fontSize: 16,
     },
+    separatorLine: {
+        height: '100%', // This will make the separator line as tall as its parent
+        width: 1,
+        backgroundColor: '#ddd',
+        marginHorizontal: 10,
+    },
+    
 
 
 });
